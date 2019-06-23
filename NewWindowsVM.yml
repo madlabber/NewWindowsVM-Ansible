@@ -59,12 +59,12 @@
         type: iso
         iso_path: '[{{ esxi_datastore }}] {{ windows_iso }}'
       disk:
-      - size_gb: 40
+      - size_gb: '{{ vm_disk_gb }}'
         type: thin
         datastore: '{{ esxi_datastore }}'
       hardware:
-        memory_mb: 2048
-        num_cpus: 2
+        memory_mb: '{{ vm_memory_mb }}'
+        num_cpus: '{{ vm_num_cpus }}'
         scsi: lsilogicsas
       networks:
       - name: '{{ vm_network }}'
@@ -72,6 +72,7 @@
       wait_for_ip_address: no
     delegate_to: localhost
     register: deploy_vm
+#  - debug: msg="{{deploy_vm}}"
   - name: Change virtual machine's boot order and related parameters
     vmware_guest_boot_manager:
       <<: *esxi_login 
@@ -123,10 +124,7 @@
     register: powerstate
   - name: Wait for VMware tools to become available 
     vmware_guest_tools_wait:
-      hostname: '{{ esxi_address }}'
-      username: '{{ esxi_username }}'
-      password: '{{ esxi_password }}'
-      validate_certs: no
+      <<: *esxi_login
       name: '{{ vm_name }}'
     delegate_to: localhost
     retries: 3
@@ -136,12 +134,6 @@
 - name: Customize Guest
   hosts: localhost 
   gather_facts: false
-  vars:
-    # esxi_login: &esxi_login
-    #   hostname: '{{ esxi_address }}'
-    #   username: '{{ esxi_username }}'
-    #   password: '{{ esxi_password }}'   
-    #   validate_certs: no  
   vars_files: 
     NewWindowsVM-vars.yml
   tasks: 
